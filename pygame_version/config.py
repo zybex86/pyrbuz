@@ -15,7 +15,7 @@ class ConfigNode:
 
 class Config:
     def __init__(self):
-        with open("part2/config.yaml", "r") as yaml_file:
+        with open("config.yaml", "r") as yaml_file:
             self.config = yaml.safe_load(yaml_file)
 
         self.screen = ConfigNode(**self.config["screen"])
