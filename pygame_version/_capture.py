@@ -1,10 +1,7 @@
 import sys
 
-import cv2
-import numpy as np
 import pygame
 import pymunk
-from PIL import Image
 
 from cloud import Cloud
 from collision import collide
@@ -40,16 +37,6 @@ game_over = False
 handler = space.add_collision_handler(CollisionTypes.PARTICLE, CollisionTypes.PARTICLE)
 handler.begin = collide
 handler.data["score"] = 0
-
-# Capture
-loop_counter = 0
-frame_skip = 2
-writer = cv2.VideoWriter(
-    "scenes/playback_part2.mp4",
-    cv2.VideoWriter.fourcc("a", "v", "c", "1"),
-    config.screen.fps // frame_skip,
-    (config.screen.width, config.screen.height),
-)
 
 while not game_over:
     # Handle user input
@@ -103,13 +90,6 @@ while not game_over:
     # Step game
     space.step(1 / config.screen.fps)
     pygame.display.update()
-
-    loop_counter += 1
-    if loop_counter % frame_skip == 0:
-        data = pygame.image.tostring(pygame.display.get_surface(), "RGB")
-        img = Image.frombytes("RGB", (config.screen.width, config.screen.height), data)
-        writer.write(np.array(img)[..., ::-1])
-    print(f"\rfps: {clock.get_fps():.4f}", end="", flush=True)
 
     clock.tick(config.screen.fps)
 
