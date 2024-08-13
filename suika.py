@@ -67,8 +67,18 @@ class Particle:
         if self.alive:
             c1 = np.array(COLORS[self.n])
             c2 = (c1 * DAMPING).astype(int)
-            pygame.draw.circle(screen, tuple(c2), self.body.position, self.radius)
-            pygame.draw.circle(screen, tuple(c1), self.body.position, self.radius * 0.9)
+            pygame.draw.circle(
+                screen,
+                tuple(c2),
+                self.body.position,
+                self.radius,
+            )
+            pygame.draw.circle(
+                screen,
+                tuple(c1),
+                self.body.position,
+                self.radius * 0.9,
+            )
 
     def kill(self, space) -> None:
         space.remove(self.body, self.shape)
