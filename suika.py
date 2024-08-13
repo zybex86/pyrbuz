@@ -31,7 +31,7 @@ COLORS = [
     (0, 185, 0),
 ]
 FPS = 240
-RADII = [17,25,32,38,50,63,75,87,100,115,135]
+RADII = [17, 25, 32, 38, 50, 63, 75, 87, 100, 115, 135]
 THICKNESS = 14
 DENSITY = 0.001
 ELASTICITY = 0.1
@@ -41,12 +41,13 @@ DAMPING = 0.8
 NEXT_DELAY = FPS
 NEXT_STEPS = 20
 BIAS = 0.00001
-POINTS = [1,3 ,6 ,10,15,21,28,36,45,55,66]
+POINTS = [1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66]
 
 shape_to_particle = dict()
 
+
 class Particle:
-    def __init__(self, pos, n ,space, mapper) -> None:
+    def __init__(self, pos, n, space, mapper) -> None:
         self.n = n % 11
         self.radius = RADII[self.n]
         self.body = pymunk.Body(body_type=pymunk.Body.DYNAMIC)
@@ -72,13 +73,14 @@ class Particle:
     def kill(self, space) -> None:
         space.remove(self.body, self.shape)
         self.alive = False
-    
+
     @property
     def pos(self) -> np.array:
         return np.array(self.body.position)
 
+
 class PreParticle:
-    def __init__(self, x ,n) -> None:
+    def __init__(self, x, n) -> None:
         self.n = n % 11
         self.radius = RADII[self.n]
         self.x = x
@@ -92,21 +94,23 @@ class PreParticle:
     def set_x(self, x) -> None:
         lim = PAD[0] + self.radius + THICKNESS // 2
         self.x = np.clip(x, lim, WIDTH - lim)
-    
+
     def release(self, space, mapper) -> Particle:
         return Particle((self.x, PAD[1] // 2), self.n, space, mapper)
 
+
 class Wall:
     thickness = THICKNESS
-    
+
     def __init__(self, a, b, space) -> None:
         self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
         self.shape = pymunk.Segment(self.body, a, b, self.thickness // 2)
         self.shape.friction = 10
         space.add(self.body, self.shape)
-    
+
     def draw(self, screen) -> None:
         pygame.draw.line(screen, W_COLOR, self.shape.a, self.shape.b, self.thickness)
+
 
 def resolve_collision(p1, p2, space, particles, mapper) -> Optional[Particle]:
     if p1.n == p2.n:
@@ -114,16 +118,17 @@ def resolve_collision(p1, p2, space, particles, mapper) -> Optional[Particle]:
         if distance < 2 * p1.radius:
             p1.kill(space)
             p2.kill(space)
-            pn = Particle(np.mean([p1.pos, p2.pos], axis=0), p1.n+1, space, mapper)
+            pn = Particle(np.mean([p1.pos, p2.pos], axis=0), p1.n + 1, space, mapper)
             for p in particles:
                 if p.alive:
                     vector = p.pos - pn.pos
                     distance = np.linalg.norm(vector)
                     if distance < pn.radius + p.radius:
-                        impulse = IMPULSE * vector / (distance ** 2)
+                        impulse = IMPULSE * vector / (distance**2)
                         p.body.apply_impulse_at_local_point(tuple(impulse))
             return pn
     return
+
 
 # Create Pygame.window
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -170,6 +175,7 @@ def collide(arbiter, space, data) -> bool:
         data["score"] += POINTS[pa1.n]
     return cond
 
+
 handler.begin = collide
 handler.data["mapper"] = shape_to_particle
 handler.data["particles"] = particles
@@ -191,7 +197,7 @@ while not game_over:
             elif event.type == pygame.MOUSEBUTTONDOWN and wait_for_next == 0:
                 particles.append(next_particle.release(space, shape_to_particle))
                 wait_for_next = NEXT_DELAY
-    
+
     next_particle.set_x(pygame.mouse.get_pos()[0])
 
     if wait_for_next > 1:
@@ -199,7 +205,7 @@ while not game_over:
     elif wait_for_next == 1:
         next_particle = PreParticle(next_particle.x, rng.integers(0, 5))
         wait_for_next -= 1
-    
+
     # draw background and particles
     screen.fill(BG_COLOR)
     if wait_for_next == 0:
@@ -209,13 +215,13 @@ while not game_over:
     for p in particles:
         p.draw(screen)
         if p.pos[1] < PAD[1] and p.has_collided:
-            label = overfont.render("Koniec Gry!", 1, (0,0,0))
+            label = overfont.render("Koniec Gry!", 1, (0, 0, 0))
             screen.blit(label, PAD)
             game_over = True
-    label = scorefont.render(f"Punkty: {handler.data["score"]}", 1, (0,0,0))
-    screen.blit(label, (10,10))
+    label = scorefont.render(f"Punkty: {handler.data["score"]}", 1, (0, 0, 0))
+    screen.blit(label, (10, 10))
 
-    space.step(1/FPS)
+    space.step(1 / FPS)
     pygame.display.update()
     clock.tick(FPS)
 
@@ -225,6 +231,11 @@ while True:
             pygame.quit()
             sys.exit()
         elif event.type == pygame.KEYDOWN:
-            if event.key in [pygame.K_RETURN, pygame.K_SPACE, pygame.K_q, pygame.K_ESCAPE]:
+            if event.key in [
+                pygame.K_RETURN,
+                pygame.K_SPACE,
+                pygame.K_q,
+                pygame.K_ESCAPE,
+            ]:
                 pygame.quit()
                 sys.exit()
