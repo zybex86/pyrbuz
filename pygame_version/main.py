@@ -13,7 +13,7 @@ from wall import Wall
 
 # Create Pygame window
 screen = pygame.display.set_mode((config.screen.width, config.screen.height))
-pygame.display.set_caption("PySuika")
+pygame.display.set_caption("Pyrbuz")
 clock = pygame.time.Clock()
 
 # Physics
