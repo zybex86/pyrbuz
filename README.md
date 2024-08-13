@@ -30,5 +30,6 @@ https://github.com/Ole-Batting/suika
 
 ## Historia wersji
 
+- v0.2.1 - grafiki poprawione wg projektu mojej córeckzi :)
 - v0.2.0 - wersja z grafikami według drugiego poradnika
 - v0.1.0 - podstawowa gra według pierwszego poradnika
