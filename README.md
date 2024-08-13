@@ -11,6 +11,7 @@ Aplikacja `pyrbuz` to port `Suika Game` napisany w pythonie. Pierwsza wersja kor
 - pillow == 10.4.0
 - numpy == 2.0.1
 - pymunk == 6.8.1
+- pyyaml == 6.0.2
 
 ## Instalacja
 
