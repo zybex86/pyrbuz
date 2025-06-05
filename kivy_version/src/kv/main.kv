@@ -16,28 +16,41 @@
         size: root.size
         pos: root.pos
 
-        # Score at the top
-        ScoreLabel:
-            id: score_label
-            size_hint_y: None
-            height: 50
-
-        # Main game area in the middle
+        # Main game area at the top
         FloatLayout:
             id: game_area
             size_hint_y: 0.85
 
-        # Restart button at the bottom
-        AnchorLayout:
+        # Bottom bar with score and restart button
+        BoxLayout:
+            orientation: "horizontal"
             size_hint_y: None
             height: 60
-            anchor_x: "left"
-            anchor_y: "bottom"
+
+            ScoreLabel:
+                id: score_label
+                size_hint_x: 1
+                height: 50
+
             Button:
                 text: "Restart"
-                size_hint: None, None
-                size: 120, 40
+                size_hint_x: None
+                width: 140
+                height: 44
+                font_size: 20
+                color: 1, 1, 1, 1  # White text
+                background_normal: ""  # Remove default background image
+                background_color: 0.2, 0.6, 0.9, 1  # Soft blue background
+                border: 16, 16, 16, 16
+                padding: 16, 0
                 on_release: root.restart_game()
+                canvas.before:
+                    Color:
+                        rgba: 0.2, 0.6, 0.9, 1  # Match background_color for rounded effect
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [16, 16, 16, 16]
 
 # Custom widget for displaying the score
 <ScoreLabel>:

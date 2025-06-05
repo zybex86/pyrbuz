@@ -10,6 +10,7 @@ from kivy.app import App
 from kivy.uix.widget import Widget
 from kivy.uix.image import Image
 from kivy.clock import Clock
+from kivy.uix.label import Label
 from kivy.graphics import Color, Rectangle, Line
 from kivy.core.window import Window
 
@@ -20,7 +21,7 @@ from config import (
 )
 from particle import Particle  # Import the Particle class from the new module
 from physics import add_walls  # Add this import
-from widgets import ScoreLabel  # Import the ScoreLabel widget
+from widgets import NextFruitPreview, ScoreLabel  # Import the ScoreLabel widget
 
 SELECTABLE_FRUITS = FRUIT_TYPES[:4]
 SELECTABLE_RADII = FRUIT_RADII[:4]
@@ -41,12 +42,13 @@ class Game(Widget):
         self.size = Window.size
         self.particles = []
         self.last_drop_time = 0
-        self.score = 0  # Initialize score FIRST
+        self.score = 0
+        self.game_over = False
+        self.game_over_label = None
 
         # Now call super().__init__ (this may trigger on_kv_post)
         super().__init__(**kwargs)
 
-        # The rest of your initialization code follows...
         # Physics space
         self.space = pymunk.Space()
         self.space.gravity = (0, -GRAVITY)
@@ -66,21 +68,29 @@ class Game(Widget):
             self.right_wall = Line(points=[], width=self.wall_thickness)
             self.floor_wall = Line(points=[], width=self.wall_thickness)
 
+        # Draw the game over line (dotted) at the top of the play area
+        with self.canvas:
+            Color(0.8, 0, 0, 0.5)  # Red color for the game over line
+            self.game_over_line = Line(
+                points=[],
+                width=2,
+                dash_offset=5,
+                dash_length=10
+            )
+
         # Initialize play area and walls
         self._update_play_area()
         self._add_walls()
 
         # Add a test particle in the center of the play area (random selectable fruit)
-        fruit_name, radius = self._get_random_selectable_fruit()
-        self.add_particle((self.play_area_x + self.play_area_width // 2, self.play_area_y + self.play_area_height - 100), fruit_name, radius)
+        # fruit_name, radius = self._get_random_selectable_fruit()
+        # self.add_particle((self.play_area_x + self.play_area_width // 2, self.play_area_y + self.play_area_height - 100), fruit_name, radius)
 
         # Prepare next fruit preview (only from selectable fruits)
         self.next_fruit_name, self.next_fruit_radius = self._get_random_selectable_fruit()
-        self.next_fruit_x = self.play_area_x + self.play_area_width // 2
-        self.next_fruit_preview = Image(
-            source=os.path.join(ASSETS_DIR, f"{self.next_fruit_name}.png"),
-            size=(self.next_fruit_radius * 2, self.next_fruit_radius * 2),
-            pos=(self.next_fruit_x - self.next_fruit_radius, self.play_area_y + self.play_area_height - 80)
+        self.next_fruit_preview = NextFruitPreview(
+            self.next_fruit_name, self.next_fruit_radius,
+            self.play_area_x, self.play_area_y, self.play_area_width, self.play_area_height
         )
         self.add_widget(self.next_fruit_preview)
 
@@ -114,12 +124,13 @@ class Game(Widget):
         particle_a = getattr(shape_a.body, "user_data", None)
         particle_b = getattr(shape_b.body, "user_data", None)
 
+        # Prevent double-processing or merging dead particles
         if not (particle_a and particle_b):
-            return True  # Continue normal collision for walls/floor
-
-        # Ensure both are Particle instances and alive
+            return True
         if not (hasattr(particle_a, "fruit_name") and hasattr(particle_b, "fruit_name")):
-            return True  # Continue normal collision
+            return True
+        if not (getattr(particle_a, "alive", True) and getattr(particle_b, "alive", True)):
+            return True
 
         if particle_a.fruit_name == particle_b.fruit_name:
             try:
@@ -129,6 +140,9 @@ class Game(Widget):
                 if next_idx < len(FRUIT_TYPES):
                     next_fruit = FRUIT_TYPES[next_idx].replace(".png", "")
                     next_radius = FRUIT_RADII[next_idx]
+                    # Mark as dead before spawning new fruit to prevent re-entrancy
+                    particle_a.alive = False
+                    particle_b.alive = False
                     # Merge at average position
                     x = (particle_a.body.position.x + particle_b.body.position.x) / 2
                     y = (particle_a.body.position.y + particle_b.body.position.y) / 2
@@ -144,15 +158,16 @@ class Game(Widget):
                     self.score += 2 ** next_idx
                     self.update_score_label()
                     return False  # Prevent default collision resolution (they are gone)
-                # If there is no next fruit, do not remove the originals; let them stay
+                # If there is no next fruit, do not remove or merge
             except ValueError:
-                pass  # No next fruit, do nothing
+                pass
 
         return True  # Continue normal collision
 
     def _update_play_area(self):
         """
         Calculate and update the play area to always be centered and 80% of the window size.
+        Also update the position of the game over line.
         """
         self.screen_width, self.screen_height = self.size
         self.play_area_width = int(self.screen_width * 0.8)
@@ -173,6 +188,18 @@ class Game(Widget):
             self.play_area_x, self.play_area_y,
             self.play_area_x + self.play_area_width, self.play_area_y
         ]
+
+        # Place the game over line at a fixed distance from the top (not based on fruit radius)
+        # This avoids issues with preview or large fruits triggering game over immediately.
+        margin_from_top = 43  # px below the top of the play area (adjust as needed)
+        line_y = self.play_area_y + self.play_area_height - margin_from_top
+        self.game_over_line.points = [
+            self.play_area_x, line_y,
+            self.play_area_x + self.play_area_width, line_y
+        ]
+        # Make the line dotted (Kivy 2.2+ supports dash_length and dash_offset)
+        self.game_over_line.dash_length = 10
+        self.game_over_line.dash_offset = 5
 
     def _add_walls(self):
         """
@@ -205,7 +232,9 @@ class Game(Widget):
         self._add_walls()
         # Update preview fruit position to stay at the top of the play area
         self.next_fruit_x = self.play_area_x + self.play_area_width // 2
-        self.next_fruit_preview.pos = (self.next_fruit_x - self.next_fruit_radius, self.play_area_y + self.play_area_height - 80)
+        self.next_fruit_preview.update_position(
+            self.play_area_x, self.play_area_y, self.play_area_width, self.play_area_height
+        )
 
     def _on_window_resize(self, instance, size):
         """
@@ -242,52 +271,159 @@ class Game(Widget):
     def update(self, dt):
         """
         Step the physics simulation and update all particles each frame.
-
-        Args:
-            dt (float): Time since last update.
+        Also check for game over condition.
         """
+        if self.game_over:
+            return  # Stop updating if game is over
+
         self.space.step(dt)
         for particle in self.particles:
             particle.update()
 
-    def on_touch_move(self, touch):
+        # Check for game over: any fruit above the dotted line?
+        # Use the fruit's center (body.position.y) + radius to check the top edge of the fruit
+        margin_from_top = 80  # Must match the value in _update_play_area
+        line_y = self.play_area_y + self.play_area_height - margin_from_top
+        for particle in self.particles:
+            # Only check for game over if the fruit's top is above the line
+            if particle.alive and (particle.body.position.y + particle.radius) > line_y:
+                self.trigger_game_over()
+                break
+
+    def trigger_game_over(self):
         """
-        Move the preview fruit horizontally with the user's finger/mouse, clamped to play area.
+        Handle the game over state: show message, disable input, and stop updates.
         """
-        if self.collide_point(*touch.pos):
-            min_x = self.play_area_x + SELECTABLE_RADII[-1]
-            max_x = self.play_area_x + self.play_area_width - SELECTABLE_RADII[-1]
-            self.next_fruit_x = min(max(touch.x, min_x), max_x)
-            self.next_fruit_preview.pos = (self.next_fruit_x - self.next_fruit_radius, self.play_area_y + self.play_area_height - 80)
-        return super().on_touch_move(touch)
+        self.game_over = True
+
+        # Show a game over label in the center of the play area
+        if not self.game_over_label:
+            self.game_over_label = Label(
+                text="GAME OVER",
+                font_size=48,
+                color=(1, 0, 0, 1),
+                size_hint=(None, None),
+                size=(400, 100),
+                pos=(self.play_area_x + self.play_area_width // 2 - 200,
+                     self.play_area_y + self.play_area_height // 2 - 50)
+            )
+            self.add_widget(self.game_over_label)
+
+    def restart_game(self):
+        """
+        Reset the game state to its initial configuration.
+        """
+        # Remove all fruit particles from the game area and physics space
+        for particle in self.particles[:]:
+            particle.kill(self.space)
+            self.remove_widget(particle)
+        self.particles.clear()
+
+        # Reset the score and update the score label
+        self.score = 0
+        self.update_score_label()
+
+        # Reset the physics space (remove all shapes except static walls)
+        for shape in self.space.shapes[:]:
+            if not isinstance(shape, pymunk.Segment):
+                self.space.remove(shape.body, shape)
+
+        # Add a new starting fruit in the center of the play area
+        fruit_name, radius = self._get_random_selectable_fruit()
+        self.add_particle(
+            (self.play_area_x + self.play_area_width // 2, self.play_area_y + self.play_area_height - 100),
+            fruit_name,
+            radius
+        )
+
+        # Reset the next fruit preview
+        self.next_fruit_name, self.next_fruit_radius = self._get_random_selectable_fruit()
+        self.next_fruit_preview.update_preview(
+            self.next_fruit_name, self.next_fruit_radius,
+            self.play_area_x, self.play_area_y, self.play_area_width, self.play_area_height
+        )
+
+        # Reset pending drop position to center
+        self._pending_drop_x = self.play_area_x + self.play_area_width // 2
+
+        # Reset game over state and remove label if present
+        self.game_over = False
+        if self.game_over_label:
+            self.remove_widget(self.game_over_label)
+            self.game_over_label = None
 
     def on_touch_down(self, touch):
         """
-        Handle user touch/click to drop a fruit at the touched x position.
-        Enforces a cooldown between drops.
-        Only allows dropping selectable fruits.
+        On touch down, move the preview fruit horizontally to the touched x position,
+        but do not drop the fruit yet.
         """
-        now = time.time()
-        if self.collide_point(*touch.pos):
-            if now - self.last_drop_time >= self.DROP_COOLDOWN:
-                min_x = self.play_area_x + SELECTABLE_RADII[-1]
-                max_x = self.play_area_x + self.play_area_width - SELECTABLE_RADII[-1]
-                drop_x = min(max(touch.x, min_x), max_x)
-                drop_y = self.play_area_y + self.play_area_height - 100  # Drop from near the top of play area
-                self.add_particle((drop_x, drop_y), self.next_fruit_name, self.next_fruit_radius)
-                self.last_drop_time = now
-                # Prepare next fruit (only from selectable)
-                self.next_fruit_name, self.next_fruit_radius = self._get_random_selectable_fruit()
-                self.next_fruit_preview.source = os.path.join(ASSETS_DIR, f"{self.next_fruit_name}.png")
-                self.next_fruit_preview.size = (self.next_fruit_radius * 2, self.next_fruit_radius * 2)
-                self.next_fruit_preview.pos = (self.next_fruit_x - self.next_fruit_radius, self.play_area_y + self.play_area_height - 80)
-        return super().on_touch_down(touch)
+        if self.game_over:
+            return False
 
-    def on_kv_post(self, base_widget):
+        # Only respond to touches inside the play area (not on UI)
+        if not (self.play_area_x <= touch.x <= self.play_area_x + self.play_area_width and
+                self.play_area_y <= touch.y <= self.play_area_y + self.play_area_height):
+            return False
+
+        # Move the preview fruit horizontally, clamp within play area
+        preview_x = min(max(touch.x, self.play_area_x + self.next_fruit_radius),
+                        self.play_area_x + self.play_area_width - self.next_fruit_radius)
+        # Keep the preview at the same y as before
+        preview_y = self.play_area_y + self.play_area_height - self.next_fruit_radius + 10
+        self.next_fruit_preview.pos = (preview_x - self.next_fruit_radius, preview_y)
+        self._pending_drop_x = preview_x  # Store for use in on_touch_up
+        return True
+
+    def on_touch_move(self, touch):
         """
-        Called after the kv language is applied and ids are available.
+        Allow dragging the preview fruit horizontally while holding down.
         """
-        self.update_score_label()
+        if self.game_over:
+            return False
+
+        if not (self.play_area_x <= touch.x <= self.play_area_x + self.play_area_width and
+                self.play_area_y <= touch.y <= self.play_area_y + self.play_area_height):
+            return False
+
+        preview_x = min(max(touch.x, self.play_area_x + self.next_fruit_radius),
+                        self.play_area_x + self.play_area_width - self.next_fruit_radius)
+        preview_y = self.play_area_y + self.play_area_height - self.next_fruit_radius + 10
+        self.next_fruit_preview.pos = (preview_x - self.next_fruit_radius, preview_y)
+        self._pending_drop_x = preview_x
+        return True
+
+    def on_touch_up(self, touch):
+        """
+        On touch up, drop the fruit at the last preview position if allowed.
+        """
+        if self.game_over:
+            return False
+
+        # Enforce drop cooldown
+        now = time.time()
+        if now - self.last_drop_time < self.DROP_COOLDOWN:
+            return False
+
+        # Only drop if the touch ended inside the play area
+        if not (self.play_area_x <= touch.x <= self.play_area_x + self.play_area_width and
+                self.play_area_y <= touch.y <= self.play_area_y + self.play_area_height):
+            return False
+
+        # Use the last preview x position, or default to center if not set
+        drop_x = getattr(self, "_pending_drop_x", self.play_area_x + self.play_area_width // 2)
+        drop_y = self.play_area_y + self.play_area_height - 80  # 80px below the top
+
+        self.add_particle((drop_x, drop_y), self.next_fruit_name, self.next_fruit_radius)
+        self.last_drop_time = now
+
+        # Prepare the next fruit preview (reset to center)
+        self.next_fruit_name, self.next_fruit_radius = self._get_random_selectable_fruit()
+        self.next_fruit_preview.update_preview(
+            self.next_fruit_name, self.next_fruit_radius,
+            self.play_area_x, self.play_area_y, self.play_area_width, self.play_area_height
+        )
+        self._pending_drop_x = self.play_area_x + self.play_area_width // 2  # Reset
+        return True
 
 class GameApp(App):
     """

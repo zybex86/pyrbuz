@@ -4,13 +4,14 @@ Custom Kivy widgets for the Suika Game.
 This module defines reusable UI components for the game.
 """
 
+import os
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.widget import Widget
 from kivy.properties import StringProperty, NumericProperty
 from kivy.animation import Animation
+from config import ASSETS_DIR
 
 class FruitButton(Button):
     def __init__(self, fruit_name, **kwargs):
@@ -36,6 +37,36 @@ class FruitImage(Image):
         self.source = source
         self.size_hint = (None, None)
         self.size = (100, 100)
+
+class NextFruitPreview(Image):
+    """
+    Widget for displaying the next fruit preview.
+    This widget is purely visual and never participates in game logic or physics.
+    """
+    def __init__(self, fruit_name, radius, play_area_x, play_area_y, play_area_width, play_area_height, **kwargs):
+        super().__init__(**kwargs)
+        self.fruit_name = fruit_name
+        self.radius = radius
+        self.size = (radius * 2, radius * 2)
+        self.allow_stretch = True
+        self.keep_ratio = True
+        self.update_position(play_area_x, play_area_y, play_area_width, play_area_height)
+
+    def update_preview(self, fruit_name, radius, play_area_x, play_area_y, play_area_width, play_area_height):
+        self.fruit_name = fruit_name
+        self.radius = radius
+        self.source = os.path.join(ASSETS_DIR, f"{fruit_name}.png")
+        self.size = (radius * 2, radius * 2)
+        self.update_position(play_area_x, play_area_y, play_area_width, play_area_height)
+
+    def update_position(self, play_area_x, play_area_y, play_area_width, play_area_height):
+        """
+        Place the preview just above the play area, horizontally centered.
+        """
+        x = play_area_x + play_area_width // 2 - self.radius
+        # Place the preview just a few pixels above the play area, not at the window top
+        y = play_area_y + play_area_height - self.radius + 10  # 10px above the top edge of play area
+        self.pos = (x, y)
 
 class FruitBoxLayout(BoxLayout):
     def __init__(self, **kwargs):
