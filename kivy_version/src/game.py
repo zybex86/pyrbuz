@@ -13,20 +13,16 @@ from kivy.clock import Clock
 from kivy.graphics import Color, Rectangle, Line
 from kivy.core.window import Window
 
-from config import FRUIT_TYPES, FRUIT_RADII
+from config import (
+    ASSETS_DIR, FRUIT_TYPES, FRUIT_RADII,
+    GRAVITY, DENSITY, ELASTICITY, FRICTION,
+    BACKGROUND_COLOR, WALL_COLOR
+)
 from particle import Particle  # Import the Particle class from the new module
 from physics import add_walls  # Add this import
 
-ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
-
 SELECTABLE_FRUITS = FRUIT_TYPES[:4]
 SELECTABLE_RADII = FRUIT_RADII[:4]
-
-# Physics constants
-GRAVITY = 2000
-DENSITY = 0.001
-ELASTICITY = 0.5
-FRICTION = 0.8
 
 # Wall and background colors
 BACKGROUND_COLOR = (250/255, 240/255, 140/255, 1)

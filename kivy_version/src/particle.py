@@ -7,7 +7,11 @@ import os
 from kivy.uix.widget import Widget
 from kivy.uix.image import Image
 import pymunk
-from config import ASSETS_DIR, DENSITY, ELASTICITY, FRICTION
+from config import (
+    ASSETS_DIR, FRUIT_TYPES, FRUIT_RADII,
+    GRAVITY, DENSITY, ELASTICITY, FRICTION,
+    BACKGROUND_COLOR, WALL_COLOR
+)
 
 class Particle(Widget):
     """

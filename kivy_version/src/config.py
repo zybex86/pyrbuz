@@ -1,50 +1,29 @@
 """
-Configuration settings for the Suika Game.
-
-This module contains constants and settings used throughout the game.
+Configuration settings and constants for the Suika Game.
+Centralizes all game parameters for easy management and reuse.
 """
 
 import os
 
-# Window size (width, height)
-WINDOW_SIZE = (570, 770)
-
-# Padding for the play area (left/right, top)
-PADDING = (24, 160)
-
-# Fruit types and their corresponding image filenames
-FRUIT_TYPES = [
-    "apple.png",
-    "cherry.png",
-    "grapes.png",
-    "melon.png",
-    "orange.png",
-    "peach.png",
-    "pear.png",
-    "persimmon.png",
-    "pineapple.png",
-    "strawberry.png",
-    "watermelon.png",
-]
-
-# Fruit radii (pixels)
-FRUIT_RADII = [17, 25, 32, 38, 50, 63, 75, 87, 100, 115, 135]
-
-# Game physics settings
-GRAVITY = 2000
-DAMPING = 0.8
-
-# Colors (R, G, B)
-BACKGROUND_COLOR = (250, 240, 140)
-WALL_COLOR = (250, 190, 58)
-
 # Directory for assets (images, sounds, etc.)
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
 
+# Fruit types and their corresponding image filenames
+FRUIT_TYPES = [
+    "apple.png", "cherry.png", "grapes.png", "orange.png"
+    # Add more as needed
+]
+FRUIT_RADII = [17, 25, 32, 40]  # Extend as needed
+
 # Physics constants
+GRAVITY = 2000
 DENSITY = 0.001
 ELASTICITY = 0.5
 FRICTION = 0.8
+
+# Wall and background colors
+BACKGROUND_COLOR = (250/255, 240/255, 140/255, 1)
+WALL_COLOR = (0.2, 0.3, 0.7, 1)
 
 class Config:
     def __init__(self):
