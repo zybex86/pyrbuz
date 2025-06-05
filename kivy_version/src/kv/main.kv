@@ -1,0 +1,52 @@
+<contents>
+# Kivy language file for the main user interface layout of the game.
+
+# Root widget of the application
+<Game>:
+    # Set the background color using a canvas instruction
+    canvas.before:
+        Color:
+            rgba: 0.98, 0.94, 0.55, 1  # Light yellow background (matches BACKGROUND_COLOR)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    # Example: Add a ScoreLabel widget at the top
+    ScoreLabel:
+        id: score_label
+        pos_hint: {"top": 1}
+        size_hint: 1, None
+        height: 50
+
+    # Example: Area where fruits/particles will be displayed
+    FloatLayout:
+        id: game_area
+        # All Particle widgets will be added here dynamically from Python
+
+    # Example: Button to restart the game
+    Button:
+        text: "Restart"
+        size_hint: 0.2, 0.1
+        pos_hint: {"right": 0.98, "y": 0.02}
+        on_release: root.restart_game()
+
+# Custom widget for displaying the score
+<ScoreLabel@Label>:
+    # The text property will be updated from Python code
+    text: root.score_text
+    font_size: 32
+    color: 0, 0, 0, 1  # Black text
+
+# You can define more custom widgets or layouts below as needed
+
+# Example: Particle widget (if you want to style it in kv)
+<Particle>:
+    # The appearance of each fruit/particle can be customized here
+    # For example, you could bind the color or image source
+    # canvas:
+    #     Color:
+    #         rgba: 1, 0, 0, 1  # Example: red
+    #     Ellipse:
+    #         pos: self.pos
+    #         size: self.size
+</contents>
