@@ -10,10 +10,17 @@ ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
 
 # Fruit types and their corresponding image filenames
 FRUIT_TYPES = [
-    "apple.png", "cherry.png", "grapes.png", "orange.png"
+    "cherry.png", "strawberry.png", "grapes.png", "orange.png",
+    "persimmon.png",
+    "apple.png",
+    "pear.png",
+    "peach.png",
+    "pineapple.png",
+    "melon.png",
+    "watermelon.png",
     # Add more as needed
 ]
-FRUIT_RADII = [17, 25, 32, 40]  # Extend as needed
+FRUIT_RADII = [17, 25, 32, 38, 50, 63, 75, 87, 100, 115, 135]  # Extend as needed
 
 # Physics constants
 GRAVITY = 2000

@@ -11,31 +11,50 @@
             pos: self.pos
             size: self.size
 
-    # Example: Add a ScoreLabel widget at the top
-    ScoreLabel:
-        id: score_label
-        pos_hint: {"top": 1}
-        size_hint: 1, None
-        height: 50
+    BoxLayout:
+        orientation: "vertical"
+        size: root.size
+        pos: root.pos
 
-    # Example: Area where fruits/particles will be displayed
-    FloatLayout:
-        id: game_area
-        # All Particle widgets will be added here dynamically from Python
+        # Score at the top
+        ScoreLabel:
+            id: score_label
+            size_hint_y: None
+            height: 50
 
-    # Example: Button to restart the game
-    Button:
-        text: "Restart"
-        size_hint: 0.2, 0.1
-        pos_hint: {"right": 0.98, "y": 0.02}
-        on_release: root.restart_game()
+        # Main game area in the middle
+        FloatLayout:
+            id: game_area
+            size_hint_y: 0.85
+
+        # Restart button at the bottom
+        AnchorLayout:
+            size_hint_y: None
+            height: 60
+            anchor_x: "left"
+            anchor_y: "bottom"
+            Button:
+                text: "Restart"
+                size_hint: None, None
+                size: 120, 40
+                on_release: root.restart_game()
 
 # Custom widget for displaying the score
-<ScoreLabel@Label>:
-    # The text property will be updated from Python code
+<ScoreLabel>:
     text: root.score_text
     font_size: 32
     color: 0, 0, 0, 1  # Black text
+    size_hint: 1, None
+    height: 50
+    canvas.before:
+        PushMatrix
+        Scale:
+            origin: self.center
+            x: self.anim_scale
+            y: self.anim_scale
+    canvas.after:
+        PopMatrix
+    
 
 # You can define more custom widgets or layouts below as needed
 

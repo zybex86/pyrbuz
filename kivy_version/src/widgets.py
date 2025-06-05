@@ -9,7 +9,8 @@ from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.widget import Widget
-from kivy.properties import StringProperty
+from kivy.properties import StringProperty, NumericProperty
+from kivy.animation import Animation
 
 class FruitButton(Button):
     def __init__(self, fruit_name, **kwargs):
@@ -41,20 +42,26 @@ class FruitBoxLayout(BoxLayout):
         super().__init__(**kwargs)
         self.orientation = 'vertical'
 
-class ScoreLabel(Widget):
+class ScoreLabel(Label):
     """
-    Widget for displaying the player's score.
+    Widget for displaying the player's score with animation support.
 
     Attributes:
         score_text (str): The text to display as the score.
+        anim_scale (float): The scale factor for score animation.
     """
     score_text = StringProperty("Score: 0")
+    anim_scale = NumericProperty(1.0)
 
     def update_score(self, score: int) -> None:
         """
-        Update the displayed score.
+        Update the displayed score and animate the label.
 
         Args:
             score (int): The new score value.
         """
         self.score_text = f"Score: {score}"
+        # Animate the label to scale up and then back to normal for feedback
+        Animation.cancel_all(self, 'anim_scale')
+        anim = Animation(anim_scale=1.3, duration=0.1) + Animation(anim_scale=1.0, duration=0.2)
+        anim.start(self)

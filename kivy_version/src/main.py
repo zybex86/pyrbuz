@@ -7,6 +7,9 @@ separate from the main game logic for better maintainability.
 
 from kivy.app import App
 from game import Game
+from kivy.lang import Builder
+
+Builder.load_file("kv/main.kv")
 
 class GameApp(App):
     """

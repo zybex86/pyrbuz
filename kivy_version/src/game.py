@@ -20,6 +20,7 @@ from config import (
 )
 from particle import Particle  # Import the Particle class from the new module
 from physics import add_walls  # Add this import
+from widgets import ScoreLabel  # Import the ScoreLabel widget
 
 SELECTABLE_FRUITS = FRUIT_TYPES[:4]
 SELECTABLE_RADII = FRUIT_RADII[:4]
@@ -30,26 +31,25 @@ WALL_COLOR = (0.2, 0.3, 0.7, 1)  # Distinct blue
 
 class Game(Widget):
     """
-    Main game widget. Manages all particles, user controls, and game updates.
+    Main game widget. Manages all particles, user controls, game updates, and scoring.
     Ensures the play area is always centered and adapts to window resizing.
     """
     DROP_COOLDOWN = 0.5  # Minimum seconds between drops
 
     def __init__(self, **kwargs):
-        """
-        Initialize the game state, background, and schedule updates.
-        Optimized for tablets in landscape mode.
-        """
-        super().__init__(**kwargs)
-        # Set initial size to match the window
+        # --- Initialize all attributes needed by event handlers BEFORE super().__init__ ---
         self.size = Window.size
         self.particles = []
         self.last_drop_time = 0
+        self.score = 0  # Initialize score FIRST
 
+        # Now call super().__init__ (this may trigger on_kv_post)
+        super().__init__(**kwargs)
+
+        # The rest of your initialization code follows...
         # Physics space
         self.space = pymunk.Space()
         self.space.gravity = (0, -GRAVITY)
-        # Register collision handler for merging
         self._register_merge_handler()
 
         # Draw background color
@@ -89,6 +89,12 @@ class Game(Widget):
 
         # Schedule the update method to be called every frame.
         Clock.schedule_interval(self.update, 1.0 / 60.0)
+
+    def update_score_label(self):
+        """
+        Update the score label widget with the current score.
+        """
+        self.ids.score_label.update_score(self.score)
 
     def _register_merge_handler(self):
         """
@@ -134,7 +140,9 @@ class Game(Widget):
                         self.particles.remove(particle_a)
                     if particle_b in self.particles:
                         self.particles.remove(particle_b)
-                    # Optionally update score here
+                    # Update score: add points based on fruit size (example: 2^(next_idx))
+                    self.score += 2 ** next_idx
+                    self.update_score_label()
                     return False  # Prevent default collision resolution (they are gone)
                 # If there is no next fruit, do not remove the originals; let them stay
             except ValueError:
@@ -274,6 +282,12 @@ class Game(Widget):
                 self.next_fruit_preview.size = (self.next_fruit_radius * 2, self.next_fruit_radius * 2)
                 self.next_fruit_preview.pos = (self.next_fruit_x - self.next_fruit_radius, self.play_area_y + self.play_area_height - 80)
         return super().on_touch_down(touch)
+
+    def on_kv_post(self, base_widget):
+        """
+        Called after the kv language is applied and ids are available.
+        """
+        self.update_score_label()
 
 class GameApp(App):
     """
