@@ -8,9 +8,8 @@ from kivy.uix.widget import Widget
 from kivy.uix.image import Image
 import pymunk
 from config import (
-    ASSETS_DIR, FRUIT_TYPES, FRUIT_RADII,
-    GRAVITY, DENSITY, ELASTICITY, FRICTION,
-    BACKGROUND_COLOR, WALL_COLOR
+    ASSETS_DIR,
+    DENSITY, ELASTICITY, FRICTION,
 )
 
 class Particle(Widget):
@@ -24,11 +23,14 @@ class Particle(Widget):
         self.fruit_name = fruit_name
         self.alive = True
 
-        # Physics body and shape
+        # Calculate mass using density and area (πr²)
         mass = DENSITY * (3.1415 * radius * radius)
         moment = pymunk.moment_for_circle(mass, 0, radius)
         self.body = pymunk.Body(mass, moment)
         self.body.position = pos
+        self.body.user_data = self  # <-- Add this line!
+
+        # Create the shape and set elasticity and friction
         self.shape = pymunk.Circle(self.body, radius)
         self.shape.elasticity = ELASTICITY
         self.shape.friction = FRICTION

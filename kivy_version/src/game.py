@@ -15,7 +15,7 @@ from kivy.core.window import Window
 
 from config import (
     ASSETS_DIR, FRUIT_TYPES, FRUIT_RADII,
-    GRAVITY, DENSITY, ELASTICITY, FRICTION,
+    GRAVITY,
     BACKGROUND_COLOR, WALL_COLOR
 )
 from particle import Particle  # Import the Particle class from the new module
@@ -49,6 +49,8 @@ class Game(Widget):
         # Physics space
         self.space = pymunk.Space()
         self.space.gravity = (0, -GRAVITY)
+        # Register collision handler for merging
+        self._register_merge_handler()
 
         # Draw background color
         with self.canvas.before:
@@ -87,6 +89,58 @@ class Game(Widget):
 
         # Schedule the update method to be called every frame.
         Clock.schedule_interval(self.update, 1.0 / 60.0)
+
+    def _register_merge_handler(self):
+        """
+        Register a collision handler for merging fruits of the same type.
+        """
+        handler = self.space.add_default_collision_handler()
+        handler.begin = self._on_fruit_collision
+
+    def _on_fruit_collision(self, arbiter, space, data):
+        """
+        Handle collision between two fruits. Merge if they are the same type.
+        Only process if both bodies have a 'user_data' attribute.
+        """
+        shape_a, shape_b = arbiter.shapes
+
+        # Check if both bodies have 'user_data' (i.e., are fruits)
+        particle_a = getattr(shape_a.body, "user_data", None)
+        particle_b = getattr(shape_b.body, "user_data", None)
+
+        if not (particle_a and particle_b):
+            return True  # Continue normal collision for walls/floor
+
+        # Ensure both are Particle instances and alive
+        if not (hasattr(particle_a, "fruit_name") and hasattr(particle_b, "fruit_name")):
+            return True  # Continue normal collision
+
+        if particle_a.fruit_name == particle_b.fruit_name:
+            try:
+                idx = FRUIT_TYPES.index(f"{particle_a.fruit_name}.png")
+                next_idx = idx + 1
+                # Only merge if there is a next fruit
+                if next_idx < len(FRUIT_TYPES):
+                    next_fruit = FRUIT_TYPES[next_idx].replace(".png", "")
+                    next_radius = FRUIT_RADII[next_idx]
+                    # Merge at average position
+                    x = (particle_a.body.position.x + particle_b.body.position.x) / 2
+                    y = (particle_a.body.position.y + particle_b.body.position.y) / 2
+                    self.add_particle((x, y), next_fruit, next_radius)
+                    # Remove merged fruits
+                    particle_a.kill(self.space)
+                    particle_b.kill(self.space)
+                    if particle_a in self.particles:
+                        self.particles.remove(particle_a)
+                    if particle_b in self.particles:
+                        self.particles.remove(particle_b)
+                    # Optionally update score here
+                    return False  # Prevent default collision resolution (they are gone)
+                # If there is no next fruit, do not remove the originals; let them stay
+            except ValueError:
+                pass  # No next fruit, do nothing
+
+        return True  # Continue normal collision
 
     def _update_play_area(self):
         """
@@ -173,6 +227,7 @@ class Game(Widget):
             radius (float): Radius of the new fruit.
         """
         particle = Particle(pos, fruit_name, radius, self.space)
+        # Store reference for collision logic
         self.particles.append(particle)
         self.add_widget(particle)
 
