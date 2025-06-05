@@ -15,11 +15,12 @@ from kivy.core.window import Window
 
 from config import FRUIT_TYPES, FRUIT_RADII
 from particle import Particle  # Import the Particle class from the new module
+from physics import add_walls  # Add this import
 
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
 
-SELECTABLE_FRUITS = FRUIT_TYPES[:3]
-SELECTABLE_RADII = FRUIT_RADII[:3]
+SELECTABLE_FRUITS = FRUIT_TYPES[:4]
+SELECTABLE_RADII = FRUIT_RADII[:4]
 
 # Physics constants
 GRAVITY = 2000
@@ -137,6 +138,7 @@ class Game(Widget):
             wall.elasticity = 0.8
             wall.friction = 1.0
             self.space.add(wall)
+        add_walls(self.space, self.play_area_x, self.play_area_y, self.play_area_width, self.play_area_height)
 
     def _update_bg(self, *args):
         self.bg_rect.pos = self.pos

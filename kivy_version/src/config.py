@@ -4,6 +4,8 @@ Configuration settings for the Suika Game.
 This module contains constants and settings used throughout the game.
 """
 
+import os
+
 # Window size (width, height)
 WINDOW_SIZE = (570, 770)
 
@@ -35,6 +37,14 @@ DAMPING = 0.8
 # Colors (R, G, B)
 BACKGROUND_COLOR = (250, 240, 140)
 WALL_COLOR = (250, 190, 58)
+
+# Directory for assets (images, sounds, etc.)
+ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
+
+# Physics constants
+DENSITY = 0.001
+ELASTICITY = 0.5
+FRICTION = 0.8
 
 class Config:
     def __init__(self):
