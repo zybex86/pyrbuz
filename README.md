@@ -12,6 +12,7 @@ Aplikacja `pyrbuz` to port `Suika Game` napisany w pythonie. Pierwsza wersja kor
 - numpy == 2.0.1
 - pymunk == 6.8.1
 - pyyaml == 6.0.2
+- kivy == 2.1.0
 
 ## Instalacja
 
@@ -23,6 +24,7 @@ Aplikacja `pyrbuz` to port `Suika Game` napisany w pythonie. Pierwsza wersja kor
 
     a. v0.1.0 - Uruchom komendę `python suika.py` 
     b. v0.2.0 - Wejdź do folderu `pygame_version` i uruchom komendę `python main.py`
+    c. v0.3.0 - Wejdz do foldery `kivy_version` i przeczytaj README.md
 
 ## Kod źródłowy
 
@@ -30,6 +32,7 @@ https://github.com/Ole-Batting/suika
 
 ## Historia wersji
 
+- v0.3.0 - dodanie wersji na Kivy
 - v0.2.1 - grafiki poprawione wg projektu mojej córeckzi :)
 - v0.2.0 - wersja z grafikami według drugiego poradnika
 - v0.1.0 - podstawowa gra według pierwszego poradnika
