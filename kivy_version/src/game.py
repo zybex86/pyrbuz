@@ -5,33 +5,28 @@ This module defines the Game widget, which manages the play area, physics,
 game state, user input, and UI updates.
 """
 
-import os
 import random
 import time
 import pymunk
 from kivy.app import App
 from kivy.uix.widget import Widget
-from kivy.uix.image import Image
 from kivy.clock import Clock
 from kivy.uix.label import Label
 from kivy.graphics import Color, Rectangle, Line
 from kivy.core.window import Window
 
 from config import (
-    ASSETS_DIR, FRUIT_TYPES, FRUIT_RADII,
+    FRUIT_TYPES, FRUIT_RADII,
     GRAVITY,
     BACKGROUND_COLOR, WALL_COLOR
 )
 from particle import Particle  # Import the Particle class from the new module
 from physics import add_walls  # Add this import
-from widgets import NextFruitPreview, ScoreLabel  # Import the ScoreLabel widget
+from widgets import NextFruitPreview  # Import the ScoreLabel widget
 
 SELECTABLE_FRUITS = FRUIT_TYPES[:4]
 SELECTABLE_RADII = FRUIT_RADII[:4]
 
-# Wall and background colors
-BACKGROUND_COLOR = (250/255, 240/255, 140/255, 1)
-WALL_COLOR = (0.2, 0.3, 0.7, 1)  # Distinct blue
 
 class Game(Widget):
     """

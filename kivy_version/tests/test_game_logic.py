@@ -5,7 +5,6 @@ These tests focus on pure logic: score calculation, fruit merging, and configura
 GUI and physics-dependent code should be tested separately or with integration tests.
 """
 
-import pytest
 from game import Game
 
 def test_score_increases_on_merge():
@@ -13,7 +12,6 @@ def test_score_increases_on_merge():
     Test that merging two fruits increases the score correctly.
     """
     game = Game()
-    initial_score = game.score
     # Simulate a merge that would result in the third fruit (index 2)
     next_idx = 2
     game.score = 0
