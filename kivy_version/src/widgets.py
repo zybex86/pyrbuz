@@ -44,7 +44,9 @@ class NextFruitPreview(Image):
     This widget is purely visual and never participates in game logic or physics.
     """
     def __init__(self, fruit_name, radius, play_area_x, play_area_y, play_area_width, play_area_height, **kwargs):
-        super().__init__(**kwargs)
+        # Set the image source immediately to avoid a blank preview
+        source_path = os.path.join(ASSETS_DIR, f"{fruit_name}.png")
+        super().__init__(source=source_path, **kwargs)
         self.fruit_name = fruit_name
         self.radius = radius
         self.size = (radius * 2, radius * 2)

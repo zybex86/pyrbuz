@@ -35,6 +35,7 @@ class Game(Widget):
     Main game widget. Manages all particles, user controls, game updates, and scoring.
     Ensures the play area is always centered and adapts to window resizing.
     """
+    GAME_OVER_MARGIN = 40  # Margin from the top of the play area for game over detection
     DROP_COOLDOWN = 0.5  # Minimum seconds between drops
 
     def __init__(self, **kwargs):
@@ -191,8 +192,7 @@ class Game(Widget):
 
         # Place the game over line at a fixed distance from the top (not based on fruit radius)
         # This avoids issues with preview or large fruits triggering game over immediately.
-        margin_from_top = 43  # px below the top of the play area (adjust as needed)
-        line_y = self.play_area_y + self.play_area_height - margin_from_top
+        line_y = self.play_area_y + self.play_area_height - self.GAME_OVER_MARGIN
         self.game_over_line.points = [
             self.play_area_x, line_y,
             self.play_area_x + self.play_area_width, line_y
@@ -282,8 +282,7 @@ class Game(Widget):
 
         # Check for game over: any fruit above the dotted line?
         # Use the fruit's center (body.position.y) + radius to check the top edge of the fruit
-        margin_from_top = 80  # Must match the value in _update_play_area
-        line_y = self.play_area_y + self.play_area_height - margin_from_top
+        line_y = self.play_area_y + self.play_area_height - self.GAME_OVER_MARGIN
         for particle in self.particles:
             # Only check for game over if the fruit's top is above the line
             if particle.alive and (particle.body.position.y + particle.radius) > line_y:
@@ -363,7 +362,7 @@ class Game(Widget):
         # Only respond to touches inside the play area (not on UI)
         if not (self.play_area_x <= touch.x <= self.play_area_x + self.play_area_width and
                 self.play_area_y <= touch.y <= self.play_area_y + self.play_area_height):
-            return False
+            return super().on_touch_down(touch)
 
         # Move the preview fruit horizontally, clamp within play area
         preview_x = min(max(touch.x, self.play_area_x + self.next_fruit_radius),
@@ -372,7 +371,7 @@ class Game(Widget):
         preview_y = self.play_area_y + self.play_area_height - self.next_fruit_radius + 10
         self.next_fruit_preview.pos = (preview_x - self.next_fruit_radius, preview_y)
         self._pending_drop_x = preview_x  # Store for use in on_touch_up
-        return True
+        return super().on_touch_down(touch)
 
     def on_touch_move(self, touch):
         """
@@ -390,7 +389,7 @@ class Game(Widget):
         preview_y = self.play_area_y + self.play_area_height - self.next_fruit_radius + 10
         self.next_fruit_preview.pos = (preview_x - self.next_fruit_radius, preview_y)
         self._pending_drop_x = preview_x
-        return True
+        return super().on_touch_move(touch)
 
     def on_touch_up(self, touch):
         """
@@ -423,7 +422,7 @@ class Game(Widget):
             self.play_area_x, self.play_area_y, self.play_area_width, self.play_area_height
         )
         self._pending_drop_x = self.play_area_x + self.play_area_width // 2  # Reset
-        return True
+        return super().on_touch_up(touch)
 
 class GameApp(App):
     """
