@@ -1,6 +1,9 @@
-# File: kivy_version/src/game.py
-# Main game logic for the Kivy version of Suika Game using fruit images.
-# This version ensures the play area is always centered, regardless of window size.
+"""
+Main game logic and state management for the Kivy Suika Game.
+
+This module defines the Game widget, which manages the play area, physics,
+game state, user input, and UI updates.
+"""
 
 import os
 import random
@@ -32,8 +35,22 @@ WALL_COLOR = (0.2, 0.3, 0.7, 1)  # Distinct blue
 
 class Game(Widget):
     """
-    Main game widget. Manages all particles, user controls, game updates, and scoring.
-    Ensures the play area is always centered and adapts to window resizing.
+    Main game widget for Suika Game.
+
+    Responsibilities:
+        - Manages all fruit particles and their physics.
+        - Handles user input for dropping and moving fruits.
+        - Updates score, game over state, and UI elements.
+        - Ensures the play area is always centered and responsive to window resizing.
+
+    Attributes:
+        particles (list): List of all active Particle instances.
+        score (int): Current player score.
+        game_over (bool): Whether the game is over.
+        next_fruit_name (str): Name of the next fruit to drop.
+        next_fruit_radius (float): Radius of the next fruit to drop.
+        next_fruit_preview (NextFruitPreview): Widget showing the next fruit.
+        ...
     """
     GAME_OVER_MARGIN = 40  # Margin from the top of the play area for game over detection
     DROP_COOLDOWN = 0.5  # Minimum seconds between drops
@@ -311,6 +328,9 @@ class Game(Widget):
     def restart_game(self):
         """
         Reset the game state to its initial configuration.
+
+        This method removes all fruit particles, resets the score and physics space,
+        updates the next fruit preview, and clears the game over state.
         """
         # Remove all fruit particles from the game area and physics space
         for particle in self.particles[:]:
@@ -357,7 +377,7 @@ class Game(Widget):
         but do not drop the fruit yet.
         """
         if self.game_over:
-            return False
+            return super().on_touch_down(touch)
 
         # Only respond to touches inside the play area (not on UI)
         if not (self.play_area_x <= touch.x <= self.play_area_x + self.play_area_width and

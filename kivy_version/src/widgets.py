@@ -1,7 +1,8 @@
 """
 Custom Kivy widgets for the Suika Game.
 
-This module defines reusable UI components for the game.
+This module defines reusable UI components such as FruitButton, FruitLabel,
+FruitImage, NextFruitPreview, ScoreLabel, and layout helpers.
 """
 
 import os
@@ -40,8 +41,14 @@ class FruitImage(Image):
 
 class NextFruitPreview(Image):
     """
-    Widget for displaying the next fruit preview.
-    This widget is purely visual and never participates in game logic or physics.
+    Widget for displaying the next fruit preview above the play area.
+
+    This widget is purely visual and does not participate in game logic or physics.
+
+    Args:
+        fruit_name (str): Name of the fruit to preview.
+        radius (float): Radius of the fruit.
+        play_area_x, play_area_y, play_area_width, play_area_height: Play area geometry for positioning.
     """
     def __init__(self, fruit_name, radius, play_area_x, play_area_y, play_area_width, play_area_height, **kwargs):
         # Set the image source immediately to avoid a blank preview

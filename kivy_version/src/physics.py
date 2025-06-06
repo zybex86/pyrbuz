@@ -1,7 +1,7 @@
 """
 Physics setup and wall management for the Suika Game.
 
-This module provides functions to add static boundaries (floor and walls)
+Provides functions to add static boundaries (floor and walls)
 to the pymunk physics space, ensuring fruits stay within the play area.
 """
 

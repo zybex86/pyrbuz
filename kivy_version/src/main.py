@@ -1,8 +1,8 @@
 """
 Entry point for the Kivy Suika Game application.
 
-This module initializes and runs the Kivy app, keeping the entry point
-separate from the main game logic for better maintainability.
+This module initializes and runs the Kivy app, loading the main UI layout
+and setting up the root Game widget.
 """
 
 from kivy.app import App

@@ -1,6 +1,8 @@
 """
 Configuration settings and constants for the Suika Game.
-Centralizes all game parameters for easy management and reuse.
+
+Centralizes all game parameters for easy management and reuse, including
+asset paths, fruit types, physics constants, and color schemes.
 """
 
 import os

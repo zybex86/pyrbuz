@@ -1,6 +1,8 @@
 """
 Defines the Particle (fruit) class for the Suika Game.
-Encapsulates all logic related to a single fruit, including physics and rendering.
+
+Encapsulates all logic related to a single fruit, including physics, rendering,
+and interaction with the game space.
 """
 
 import os
@@ -15,6 +17,14 @@ from config import (
 class Particle(Widget):
     """
     Represents a single fruit in the game, with physics and image.
+
+    Attributes:
+        body (pymunk.Body): The physics body for the fruit.
+        shape (pymunk.Shape): The physics shape for the fruit.
+        image (Image): The Kivy image widget for rendering.
+        fruit_name (str): Name of the fruit.
+        radius (float): Radius of the fruit.
+        alive (bool): Whether the fruit is active in the game.
     """
     def __init__(self, pos, fruit_name, radius, space, **kwargs):
         super().__init__(**kwargs)
