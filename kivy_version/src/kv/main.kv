@@ -1,0 +1,84 @@
+<contents>
+# Kivy language file for the main user interface layout of the game.
+
+# Root widget of the application
+<Game>:
+    # Set the background color using a canvas instruction
+    canvas.before:
+        Color:
+            rgba: 0.98, 0.94, 0.55, 1  # Light yellow background (matches BACKGROUND_COLOR)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        size: root.size
+        pos: root.pos
+
+        # Main game area at the top
+        FloatLayout:
+            id: game_area
+            size_hint_y: 0.85
+
+        # Bottom bar with score and restart button
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: 60
+
+            ScoreLabel:
+                id: score_label
+                size_hint_x: 1
+                height: 50
+
+            Button:
+                text: "Restart"
+                size_hint_x: None
+                width: 140
+                height: 44
+                font_size: 20
+                color: 1, 1, 1, 1  # White text
+                background_normal: ""  # Remove default background image
+                background_color: 0.2, 0.6, 0.9, 1  # Soft blue background
+                border: 16, 16, 16, 16
+                padding: 16, 0
+                on_release: app.root.restart_game()
+                canvas.before:
+                    Color:
+                        rgba: 0.2, 0.6, 0.9, 1  # Match background_color for rounded effect
+                    RoundedRectangle:
+                        pos: self.pos
+                        size: self.size
+                        radius: [16, 16, 16, 16]
+
+# Custom widget for displaying the score
+<ScoreLabel>:
+    text: root.score_text
+    font_size: 32
+    color: 0, 0, 0, 1  # Black text
+    size_hint: 1, None
+    height: 50
+    canvas.before:
+        PushMatrix
+        Scale:
+            origin: self.center
+            x: self.anim_scale
+            y: self.anim_scale
+    canvas.after:
+        PopMatrix
+    
+
+# You can define more custom widgets or layouts below as needed
+
+# Example: Particle widget (if you want to style it in kv)
+<Particle>:
+    # The appearance of each fruit/particle can be customized here
+    # For example, you could bind the color or image source
+    # canvas:
+    #     Color:
+    #         rgba: 1, 0, 0, 1  # Example: red
+    #     Ellipse:
+    #         pos: self.pos
+    #         size: self.size
+</contents>

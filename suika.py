@@ -1,3 +1,4 @@
+# Main imports
 import sys
 from typing import Optional
 
@@ -5,10 +6,11 @@ import numpy as np
 import pygame
 import pymunk
 
+# Initialize pygame and random number generator
 pygame.init()
 rng = np.random.default_rng()
 
-# Constants
+# Game constants and configuration
 SIZE = WIDTH, HEIGHT = np.array([570, 770])
 PAD = (24, 160)
 A = (PAD[0], PAD[1])
@@ -43,12 +45,18 @@ NEXT_STEPS = 20
 BIAS = 0.00001
 POINTS = [1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66]
 
+# Mapping pymunk shapes to Particle objects
 shape_to_particle = dict()
 
 
 class Particle:
+    """
+    Represents a single fruit in the game.
+    Handles physics, drawing, and merging logic.
+    """
+
     def __init__(self, pos, n, space, mapper) -> None:
-        self.n = n % 11
+        self.n = n % 11  # Fruit type index
         self.radius = RADII[self.n]
         self.body = pymunk.Body(body_type=pymunk.Body.DYNAMIC)
         self.body.position = tuple(pos)
@@ -58,12 +66,15 @@ class Particle:
         self.shape.collision_type = 1
         self.shape.friction = 0.2
         self.has_collided = False
-        mapper[self.shape] = self
+        mapper[self.shape] = self  # Map shape to this Particle
 
         space.add(self.body, self.shape)
         self.alive = True
 
     def draw(self, screen) -> None:
+        """
+        Draws the fruit as two circles (shadow + main).
+        """
         if self.alive:
             c1 = np.array(COLORS[self.n])
             c2 = (c1 * DAMPING).astype(int)
@@ -81,35 +92,58 @@ class Particle:
             )
 
     def kill(self, space) -> None:
+        """
+        Removes the fruit from the physics space and marks it as dead.
+        """
         space.remove(self.body, self.shape)
         self.alive = False
 
     @property
     def pos(self) -> np.array:
+        """
+        Returns the current position as a numpy array.
+        """
         return np.array(self.body.position)
 
 
 class PreParticle:
+    """
+    Represents the fruit that is about to be dropped by the player.
+    """
+
     def __init__(self, x, n) -> None:
         self.n = n % 11
         self.radius = RADII[self.n]
         self.x = x
 
     def draw(self, screen) -> None:
+        """
+        Draws the preview fruit at the top of the screen.
+        """
         c1 = np.array(COLORS[self.n])
         c2 = (c1 * DAMPING).astype(int)
         pygame.draw.circle(screen, tuple(c2), (self.x, PAD[1] // 2), self.radius)
         pygame.draw.circle(screen, tuple(c1), (self.x, PAD[1] // 2), self.radius * 0.9)
 
     def set_x(self, x) -> None:
+        """
+        Sets the horizontal position, clamped to the play area.
+        """
         lim = PAD[0] + self.radius + THICKNESS // 2
         self.x = np.clip(x, lim, WIDTH - lim)
 
     def release(self, space, mapper) -> Particle:
+        """
+        Drops the fruit into the game, creating a new Particle.
+        """
         return Particle((self.x, PAD[1] // 2), self.n, space, mapper)
 
 
 class Wall:
+    """
+    Represents a static wall in the game.
+    """
+
     thickness = THICKNESS
 
     def __init__(self, a, b, space) -> None:
@@ -119,16 +153,24 @@ class Wall:
         space.add(self.body, self.shape)
 
     def draw(self, screen) -> None:
+        """
+        Draws the wall as a line.
+        """
         pygame.draw.line(screen, W_COLOR, self.shape.a, self.shape.b, self.thickness)
 
 
 def resolve_collision(p1, p2, space, particles, mapper) -> Optional[Particle]:
+    """
+    Handles merging two fruits of the same type.
+    Returns the new merged Particle if a merge occurred.
+    """
     if p1.n == p2.n:
         distance = np.linalg.norm(p1.pos - p2.pos)
         if distance < 2 * p1.radius:
             p1.kill(space)
             p2.kill(space)
             pn = Particle(np.mean([p1.pos, p2.pos], axis=0), p1.n + 1, space, mapper)
+            # Apply impulse to nearby particles
             for p in particles:
                 if p.alive:
                     vector = p.pos - pn.pos
@@ -140,7 +182,9 @@ def resolve_collision(p1, p2, space, particles, mapper) -> Optional[Particle]:
     return
 
 
-# Create Pygame.window
+# --- Main game setup ---
+
+# Create Pygame window and fonts
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("PySuika")
 clock = pygame.time.Clock()
@@ -148,30 +192,34 @@ pygame.font.init()
 scorefont = pygame.font.SysFont("monospace", 32)
 overfont = pygame.font.SysFont("monospace", 72)
 
+# Create pymunk physics space
 space = pymunk.Space()
 space.gravity = (0, GRAVITY)
 space.damping = DAMPING
 space.collision_bias = BIAS
 
-# Walls
+# Create walls
 pad = 20
 left = Wall(A, B, space)
 bottom = Wall(B, C, space)
 right = Wall(C, D, space)
 walls = [left, bottom, right]
 
-# List to store particles
+# Game state variables
 wait_for_next = 0
 next_particle = PreParticle(WIDTH // 2, rng.integers(0, 5))
 particles = []
-
 game_over = False
 
-# Collision handler
+# Collision handler for merging fruits
 handler = space.add_collision_handler(1, 1)
 
 
 def collide(arbiter, space, data) -> bool:
+    """
+    Handles collision events between two particles.
+    If they are the same type, merges them.
+    """
     sh1, sh2 = arbiter.shapes
     _mapper = data["mapper"]
     pa1 = _mapper[sh1]
@@ -191,7 +239,7 @@ handler.data["mapper"] = shape_to_particle
 handler.data["particles"] = particles
 handler.data["score"] = 0
 
-# MAIN GAME LOOP
+# --- Main game loop ---
 while not game_over:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -216,7 +264,7 @@ while not game_over:
         next_particle = PreParticle(next_particle.x, rng.integers(0, 5))
         wait_for_next -= 1
 
-    # draw background and particles
+    # Draw background and all game objects
     screen.fill(BG_COLOR)
     if wait_for_next == 0:
         next_particle.draw(screen)
@@ -224,17 +272,19 @@ while not game_over:
         w.draw(screen)
     for p in particles:
         p.draw(screen)
+        # Game over if a particle touches the top and has collided
         if p.pos[1] < PAD[1] and p.has_collided:
             label = overfont.render("Koniec Gry!", 1, (0, 0, 0))
             screen.blit(label, PAD)
             game_over = True
-    label = scorefont.render(f"Punkty: {handler.data["score"]}", 1, (0, 0, 0))
+    label = scorefont.render(f"Punkty: {handler.data['score']}", 1, (0, 0, 0))
     screen.blit(label, (10, 10))
 
     space.step(1 / FPS)
     pygame.display.update()
     clock.tick(FPS)
 
+# --- Game over loop ---
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:

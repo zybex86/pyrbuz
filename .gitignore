@@ -1,2 +1,13 @@
 /pyrbuz
 *.pyc
+__pycache__/
+
+#pyenv
+.python-version
+
+# copilot
+.github
+
+# venv
+kivy_version/kivy_env
+
